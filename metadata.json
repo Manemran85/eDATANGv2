@@ -1,0 +1,8 @@
+{
+  "name": "Sistem Kehadiran Pintar Staf",
+  "description": "A modern, mobile-first school attendance system for teachers and staff with geolocation clock-in, dashboard analytics, and administrative controls.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}

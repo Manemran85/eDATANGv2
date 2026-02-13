@@ -1,0 +1,599 @@
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Kehadiran Pintar SKPK</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        .animate-slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        /* Hide Google Sites default iframe border if possible */
+        iframe { border: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <div id="app" class="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative overflow-hidden">
+        <!-- Loading Screen -->
+        <div id="loading" class="absolute inset-0 z-50 bg-white flex flex-col items-center justify-center">
+            <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-indigo-600 font-bold animate-pulse text-xs uppercase tracking-widest">Sila Tunggu...</p>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="hidden h-full flex flex-col bg-slate-50 min-h-screen">
+            <div class="bg-[#0f172a] text-white p-10 rounded-b-[40px] shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-[80px] opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+                <div class="relative z-10">
+                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                        <img src="https://i.ibb.co/FbdxdqGc/skpk.png" alt="Logo" class="w-10 h-10 object-contain">
+                    </div>
+                    <h1 class="text-3xl font-black mb-2 leading-tight">Sistem<br>Kehadiran Staf</h1>
+                    <p class="text-indigo-200 text-sm font-medium">SK Pekan Kimanis</p>
+                </div>
+            </div>
+            <div class="p-8 flex-1 flex flex-col justify-center">
+                <form id="login-form" class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">ID Delima / Emel</label>
+                        <input type="email" id="email" class="w-full px-5 py-4 rounded-2xl bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 outline-none font-bold text-sm text-slate-800" placeholder="g-xxxxxxxx@moe-dl.edu.my" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Kata Laluan</label>
+                        <input type="password" id="password" class="w-full px-5 py-4 rounded-2xl bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 outline-none font-bold text-sm text-slate-800" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-5 rounded-2xl shadow-lg shadow-indigo-200 transition-transform active:scale-95 uppercase tracking-widest text-xs flex items-center justify-center gap-2">
+                        Log Masuk <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </form>
+                <p class="text-center text-[10px] text-slate-400 mt-8 font-medium">Versi Aplikasi Web 2.5 (Google Sites)</p>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="main-dashboard" class="hidden min-h-screen bg-[#f8fafc] pb-24">
+            <!-- Header -->
+            <div class="bg-white px-6 py-6 rounded-b-[32px] shadow-sm mb-6 flex justify-between items-center sticky top-0 z-30">
+                <div class="flex items-center gap-3">
+                    <img id="user-photo" src="" class="w-10 h-10 rounded-full border border-slate-100 object-cover">
+                    <div>
+                        <h2 id="user-name" class="font-bold text-slate-800 text-sm truncate max-w-[150px]">User</h2>
+                        <div class="flex items-center gap-1">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">LIVE</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div id="content-area" class="px-5">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div id="bottom-nav" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] z-40">
+             <div class="bg-[#0f172a] text-slate-400 rounded-full shadow-2xl h-[70px] flex justify-between items-center px-6 relative border border-slate-800">
+                <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center gap-1 hover:text-white transition-colors" data-tab="home">
+                    <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                    <span class="text-[9px] font-medium">Utama</span>
+                </button>
+                <button onclick="switchTab('history')" class="nav-btn flex flex-col items-center gap-1 hover:text-white transition-colors" data-tab="history">
+                    <i data-lucide="fingerprint" class="w-5 h-5"></i>
+                    <span class="text-[9px] font-medium">Rekod</span>
+                </button>
+                
+                <!-- FAB Clock In -->
+                <div class="absolute left-1/2 -translate-x-1/2 -top-8">
+                    <button onclick="switchTab('clockin')" class="w-16 h-16 bg-indigo-600 rounded-full border-4 border-slate-100 flex items-center justify-center shadow-lg transform active:scale-95 transition-all hover:bg-indigo-700">
+                        <i data-lucide="plus" class="w-8 h-8 text-white"></i>
+                    </button>
+                </div>
+
+                <button onclick="switchTab('directory')" class="nav-btn flex flex-col items-center gap-1 hover:text-white transition-colors" data-tab="directory">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="text-[9px] font-medium">Staf</span>
+                </button>
+                 <button onclick="switchTab('profile')" class="nav-btn flex flex-col items-center gap-1 hover:text-white transition-colors" data-tab="profile">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                    <span class="text-[9px] font-medium">Profil</span>
+                </button>
+             </div>
+        </div>
+
+    </div>
+
+<script>
+    // --- KONFIGURASI ---
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwpjXwdasQ-lmrze321eDID14PMSjiTUOdbU0AREKx0t9jX1RCQsuq-xnEU0iKVPFgf5w/exec"; 
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSqlt8hHRNb92vCW2gILJQILKP9rY2N--6RoF8SdV8i1ELioKDq5dv6G-E1SzvmiXdW7FC8SRpwczhl/pub?output=csv";
+    const STAFF_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSqlt8hHRNb92vCW2gILJQILKP9rY2N--6RoF8SdV8i1ELioKDq5dv6G-E1SzvmiXdW7FC8SRpwczhl/pub?output=csv";
+
+    // --- STATE ---
+    let currentUser = null;
+    let staffData = [];
+    let attendanceData = [];
+    let currentTab = 'home';
+    let gpsLat = 0, gpsLon = 0, gpsDist = 0;
+    const SCHOOL_LAT = 5.614738;
+    const SCHOOL_LON = 115.889279;
+    const RADIUS_METER = 300;
+
+    // --- UTILS ---
+    const $ = (id) => document.getElementById(id);
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+    // --- INIT ---
+    async function init() {
+        lucide.createIcons();
+        checkSession();
+        
+        // Auto Sync Loop
+        setInterval(() => {
+            if(currentUser) syncData(true);
+        }, 15000);
+    }
+
+    // --- AUTH & SESSION ---
+    function checkSession() {
+        const session = localStorage.getItem('skpk_session');
+        if (session) {
+            currentUser = JSON.parse(session);
+            showDashboard();
+        } else {
+            $('loading').classList.add('hidden');
+            $('login-screen').classList.remove('hidden');
+        }
+    }
+
+    $('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = $('email').value;
+        const password = $('password').value;
+        
+        $('loading').classList.remove('hidden');
+        
+        // Simulate Login (Fetch staff data first to verify)
+        await syncData();
+        
+        // Backdoor Logic matching React app
+        if (email === 'g-65253270@moe-dl.edu.my' && password === '12345') {
+             currentUser = {
+                email: email, name: 'ROZIMAN BIN EMRAN', position: 'GURU BESAR', 
+                photo: `https://ui-avatars.com/api/?name=ROZIMAN&background=0f172a&color=fff`, isAdmin: 'YES'
+             };
+             saveSession();
+             showDashboard();
+             return;
+        }
+
+        const user = staffData.find(u => u.email === email);
+        // Default password check logic from React app
+        if (user && (password === '123456' || user.password === password)) {
+            currentUser = user;
+            saveSession();
+            showDashboard();
+        } else {
+            alert('Emel atau kata laluan salah. (Default: 123456)');
+            $('loading').classList.add('hidden');
+        }
+    });
+
+    function saveSession() {
+        localStorage.setItem('skpk_session', JSON.stringify(currentUser));
+    }
+
+    function logout() {
+        if(confirm('Log keluar?')) {
+            localStorage.removeItem('skpk_session');
+            location.reload();
+        }
+    }
+
+    // --- DATA SYNC ---
+    async function syncData(background = false) {
+        if(!background) $('loading').classList.remove('hidden');
+        try {
+            // 1. Fetch Staff
+            const staffRes = await fetch(STAFF_URL);
+            const staffText = await staffRes.text();
+            parseStaffCSV(staffText);
+
+            // 2. Fetch Attendance
+            const attRes = await fetch(CSV_URL);
+            const attText = await attRes.text();
+            parseAttendanceCSV(attText);
+
+            if(!background) renderCurrentTab();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if(!background) $('loading').classList.add('hidden');
+        }
+    }
+
+    function parseStaffCSV(text) {
+        const rows = text.split('\n').map(r => r.split(','));
+        staffData = rows.slice(1).map(c => ({
+            email: clean(c[0]), name: clean(c[1]), position: clean(c[2]), 
+            photo: `https://ui-avatars.com/api/?name=${encodeURIComponent(clean(c[1]))}&background=random`
+        })).filter(u => u.email && u.email.includes('@'));
+    }
+
+    function parseAttendanceCSV(text) {
+        const rows = text.split('\n').map(r => r.split(','));
+        attendanceData = rows.slice(1).map((c, i) => ({
+            id: i, timestamp: clean(c[0]), email: clean(c[1]), name: clean(c[2]), 
+            status: clean(c[3]), timeIn: clean(c[4]), timeOut: clean(c[5])
+        })).filter(r => r.email);
+        
+        // Reverse to get latest first
+        attendanceData.reverse();
+    }
+
+    function clean(str) {
+        return str ? str.replace(/"/g, '').trim() : '';
+    }
+
+    // --- NAVIGATION ---
+    function showDashboard() {
+        $('login-screen').classList.add('hidden');
+        $('loading').classList.add('hidden');
+        $('main-dashboard').classList.remove('hidden');
+        $('bottom-nav').classList.remove('hidden');
+        
+        $('user-name').innerText = currentUser.name;
+        $('user-photo').src = currentUser.photo;
+        
+        switchTab('home');
+    }
+
+    window.switchTab = function(tab) {
+        currentTab = tab;
+        renderCurrentTab();
+        
+        // Update Nav UI
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            if(btn.dataset.tab === tab) {
+                btn.classList.add('text-white');
+                btn.classList.remove('text-slate-400');
+            } else {
+                btn.classList.remove('text-white');
+                btn.classList.add('text-slate-400');
+            }
+        });
+    }
+
+    function renderCurrentTab() {
+        const container = $('content-area');
+        container.innerHTML = '';
+
+        if (currentTab === 'home') renderHome(container);
+        else if (currentTab === 'clockin') renderClockIn(container);
+        else if (currentTab === 'history') renderHistory(container);
+        else if (currentTab === 'directory') renderDirectory(container);
+        else if (currentTab === 'profile') renderProfile(container);
+
+        lucide.createIcons();
+    }
+
+    // --- RENDER FUNCTIONS ---
+
+    // 1. HOME DASHBOARD
+    function renderHome(container) {
+        const today = new Date().toISOString().split('T')[0];
+        // Filter attendance for today (Local approximation)
+        const todayRecs = attendanceData.filter(r => r.timestamp.includes('/') || r.timestamp.includes('-')); 
+        
+        const working = todayRecs.filter(r => r.status.includes('BEKERJA')).length; // Mock count based on data
+        const leave = todayRecs.filter(r => r.status.includes('CUTI')).length;
+        const out = todayRecs.filter(r => r.status.includes('LUAR')).length;
+
+        container.innerHTML = `
+            <div class="grid grid-cols-2 gap-4 mb-6 animate-fade-in">
+                <div class="bg-gradient-to-br from-indigo-600 to-purple-600 p-5 rounded-[24px] text-white shadow-lg shadow-indigo-200">
+                    <div class="flex items-center gap-2 mb-2">
+                         <i data-lucide="user-check" class="w-5 h-5"></i>
+                         <span class="text-[10px] font-bold uppercase tracking-wider">Hadir</span>
+                    </div>
+                    <span class="text-4xl font-black">${working}</span>
+                    <p class="text-[10px] opacity-80 mt-1">Staf Bertugas</p>
+                </div>
+                <div class="bg-white p-5 rounded-[24px] text-slate-800 shadow-sm border border-slate-100">
+                     <div class="flex items-center gap-2 mb-2 text-blue-500">
+                         <i data-lucide="briefcase" class="w-5 h-5"></i>
+                         <span class="text-[10px] font-bold uppercase tracking-wider">Luar</span>
+                    </div>
+                    <span class="text-4xl font-black">${out}</span>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50 animate-slide-up">
+                <h3 class="font-bold text-slate-800 mb-4">Aktiviti Terkini</h3>
+                <div class="space-y-4">
+                    ${attendanceData.slice(0, 5).map(r => `
+                        <div class="flex items-center gap-3 border-b border-slate-50 pb-3 last:border-0">
+                            <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 font-bold text-xs">
+                                ${r.name.charAt(0)}
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-slate-800 truncate">${r.name}</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">${r.status} • ${r.timeIn || '00:00'}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // 2. CLOCK IN
+    function renderClockIn(container) {
+        // Check if submitted today
+        const today = new Date().toISOString().split('T')[0];
+        // Note: Real date parsing from CSV timestamp is complex, assuming simple check for demo
+        const myRecord = attendanceData.find(r => r.email === currentUser.email && (r.timestamp.includes(today) || r.id < 5)); // Mock check
+
+        if (myRecord && myRecord.timestamp.includes('2025')) { // Simulating "Already Submitted" check
+             container.innerHTML = `
+                <div class="bg-white rounded-[40px] p-8 text-center shadow-xl animate-fade-in mt-10">
+                    <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="check" class="w-10 h-10 text-green-500"></i>
+                    </div>
+                    <h2 class="text-2xl font-black text-slate-800 mb-2">Berjaya!</h2>
+                    <p class="text-xs text-slate-500 font-medium mb-6">Kehadiran anda telah direkodkan.</p>
+                    <button onclick="switchTab('home')" class="w-full bg-slate-100 text-slate-600 font-bold py-4 rounded-2xl uppercase tracking-widest text-xs">Kembali</button>
+                </div>
+             `;
+             return;
+        }
+
+        // Clock In Form
+        container.innerHTML = `
+            <div class="animate-fade-in">
+                <div class="text-center mb-8">
+                    <h1 class="text-5xl font-black text-slate-800 tracking-tighter" id="live-clock">--:--</h1>
+                    <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mt-1" id="live-date">...</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status Lokasi</span>
+                        <span id="gps-status" class="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-[9px] font-black uppercase">Mencari...</span>
+                    </div>
+                    <div class="flex items-baseline gap-1">
+                        <span id="gps-dist" class="text-4xl font-black text-slate-800">0</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase">Meter</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-3 rounded-full mt-4 overflow-hidden">
+                        <div id="gps-bar" class="bg-red-500 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-2 text-right">Radius: ${RADIUS_METER}m</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <button onclick="submitAttendance('BEKERJA')" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:border-indigo-500 flex flex-col items-center gap-2 group transition-all">
+                        <i data-lucide="briefcase" class="text-indigo-600 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[9px] font-bold uppercase">Bekerja</span>
+                    </button>
+                    <button onclick="submitAttendance('URUSAN LUAR')" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:border-blue-500 flex flex-col items-center gap-2 group transition-all">
+                        <i data-lucide="plane" class="text-blue-600 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[9px] font-bold uppercase">Luar</span>
+                    </button>
+                    <button onclick="submitAttendance('CUTI')" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:border-pink-500 flex flex-col items-center gap-2 group transition-all">
+                        <i data-lucide="calendar-x" class="text-pink-600 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[9px] font-bold uppercase">Cuti</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        startClock();
+        startGPS();
+    }
+
+    // --- LOGIC: CLOCK & GPS ---
+    function startClock() {
+        const update = () => {
+            const now = new Date();
+            if($('live-clock')) {
+                $('live-clock').innerText = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:false});
+                $('live-date').innerText = now.toLocaleDateString('ms-MY', {weekday:'long', day:'numeric', month:'short'});
+            }
+        };
+        update();
+        setInterval(update, 1000);
+    }
+
+    function startGPS() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    gpsLat = pos.coords.latitude;
+                    gpsLon = pos.coords.longitude;
+                    gpsDist = calculateDistance(gpsLat, gpsLon, SCHOOL_LAT, SCHOOL_LON);
+                    
+                    if($('gps-dist')) {
+                        $('gps-dist').innerText = Math.round(gpsDist);
+                        const isInside = gpsDist <= RADIUS_METER;
+                        const statusEl = $('gps-status');
+                        const barEl = $('gps-bar');
+                        
+                        statusEl.innerText = isInside ? 'DALAM KAWASAN' : 'LUAR KAWASAN';
+                        statusEl.className = `px-3 py-1 rounded-lg text-[9px] font-black uppercase ${isInside ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`;
+                        
+                        barEl.className = `h-full transition-all duration-500 ${isInside ? 'bg-green-500' : 'bg-red-500'}`;
+                        barEl.style.width = `${Math.min((gpsDist/RADIUS_METER)*100, 100)}%`;
+                    }
+                },
+                (err) => console.warn(err),
+                { enableHighAccuracy: true }
+            );
+        }
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    window.submitAttendance = async function(status) {
+        if (status === 'BEKERJA' && gpsDist > RADIUS_METER) {
+            alert('Anda berada di luar kawasan sekolah!');
+            return;
+        }
+
+        if(!confirm(`Sahkan rekod: ${status}?`)) return;
+
+        $('loading').classList.remove('hidden');
+        
+        try {
+            const now = new Date();
+            const payload = {
+                action: 'CLOCK_IN',
+                email: currentUser.email,
+                name: currentUser.name,
+                status: status,
+                timeIn: now.toLocaleTimeString(),
+                lat: gpsLat,
+                lon: gpsLon,
+                timeOut: '', reason: '', document: ''
+            };
+
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            // Mock update local for instant feedback
+            attendanceData.unshift({
+                name: currentUser.name, status: status, timeIn: now.toLocaleTimeString(), timestamp: now.toISOString()
+            });
+
+            alert('Berjaya direkod!');
+            switchTab('home');
+
+        } catch(e) {
+            alert('Ralat sambungan.');
+        } finally {
+            $('loading').classList.add('hidden');
+        }
+    }
+
+    // 3. HISTORY
+    function renderHistory(container) {
+        const myHistory = attendanceData.filter(r => r.email === currentUser.email);
+        
+        if(myHistory.length === 0) {
+            container.innerHTML = `<div class="text-center py-10 text-slate-400 text-sm">Tiada rekod.</div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="space-y-3 pt-4 animate-slide-up">
+                <h2 class="text-lg font-bold text-slate-800 mb-4">Rekod Anda</h2>
+                ${myHistory.map(r => `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-50 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-slate-800">${r.timestamp.split(' ')[0]}</p>
+                            <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-bold uppercase">${r.status}</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-green-600">IN: ${r.timeIn}</p>
+                            <p class="text-xs font-bold text-red-400">OUT: ${r.timeOut || '--'}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    // 4. DIRECTORY
+    function renderDirectory(container) {
+         container.innerHTML = `
+            <div class="space-y-3 pt-4 animate-slide-up">
+                <h2 class="text-lg font-bold text-slate-800 mb-4">Direktori Staf</h2>
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-50 flex gap-2 mb-4">
+                    <i data-lucide="search" class="w-5 h-5 text-slate-400"></i>
+                    <input type="text" placeholder="Cari nama..." class="text-xs w-full outline-none font-bold text-slate-700" onkeyup="filterDir(this.value)">
+                </div>
+                <div id="dir-list" class="space-y-3">
+                    ${staffData.map(s => `
+                        <div class="dir-item bg-white p-4 rounded-2xl shadow-sm border border-slate-50 flex items-center gap-3">
+                            <img src="${s.photo}" class="w-10 h-10 rounded-full bg-slate-100 object-cover">
+                            <div>
+                                <p class="text-xs font-bold text-slate-800 name">${s.name}</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">${s.position}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    window.filterDir = function(val) {
+        const items = document.querySelectorAll('.dir-item');
+        items.forEach(item => {
+            const name = item.querySelector('.name').innerText.toLowerCase();
+            if(name.includes(val.toLowerCase())) item.classList.remove('hidden');
+            else item.classList.add('hidden');
+        });
+    }
+
+    // 5. PROFILE
+    function renderProfile(container) {
+        container.innerHTML = `
+            <div class="pt-8 text-center animate-fade-in">
+                <img src="${currentUser.photo}" class="w-24 h-24 rounded-full mx-auto shadow-xl border-4 border-white mb-4">
+                <h2 class="text-xl font-bold text-slate-800">${currentUser.name}</h2>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-6">${currentUser.position}</p>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-sm text-left space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Emel</label>
+                        <p class="text-sm font-bold text-slate-800">${currentUser.email}</p>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Versi Sistem</label>
+                        <p class="text-sm font-bold text-slate-800">v2.5.0 (Lite)</p>
+                    </div>
+                </div>
+
+                <button onclick="logout()" class="w-full mt-6 bg-red-50 text-red-500 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest">Log Keluar</button>
+            </div>
+        `;
+    }
+
+    // Start App
+    init();
+
+</script>
+</body>
+</html>
