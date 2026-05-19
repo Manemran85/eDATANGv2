@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { StaffMember, AttendanceStatus, AttendanceRecord, User } from '../types';
 import { api } from '../services/mockApi';
 import { Search, Filter, Phone, MessageCircle, ArrowLeft, Calendar, FileText, ExternalLink, X, Clock, RefreshCw } from 'lucide-react';
+import { formatDateToDDMMYYYY } from '../utils';
 
 export const Directory: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -146,7 +147,7 @@ export const Directory: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                           <div key={item.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-50 animate-slide-up">
                               <div className="flex justify-between items-start mb-3">
                                   <div>
-                                      <p className="text-sm font-bold text-gray-900">{item.date}</p>
+                                      <p className="text-sm font-bold text-gray-900">{formatDateToDDMMYYYY(item.date)}</p>
                                       <p className="text-[10px] text-gray-400 font-medium uppercase">{item.name}</p>
                                   </div>
                                   <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${getStatusColor(item.status)}`}>
@@ -188,38 +189,40 @@ export const Directory: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 max-w-lg mx-auto pb-32">
-      <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Senarai Staf</h2>
-          <button onClick={() => loadStaffData()} className={`p-2 rounded-full text-slate-400 hover:bg-white transition-all ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`}>
-              <RefreshCw size={20} />
-          </button>
+    <div className="h-[100dvh] flex flex-col bg-[#f8f9fc] overflow-hidden relative">
+      <div className="px-4 pt-8 pb-4 flex-shrink-0">
+          <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Senarai Staf</h2>
+              <button onClick={() => loadStaffData()} className={`p-2 rounded-full text-slate-400 hover:bg-white transition-all ${isRefreshing ? 'animate-spin text-indigo-500' : ''}`}>
+                  <RefreshCw size={20} />
+              </button>
+          </div>
+
+          <div className="relative mb-4">
+            <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
+            <input 
+                type="text" 
+                className="w-full pl-12 pr-4 py-3.5 rounded-[24px] bg-white text-gray-900 border border-gray-100 shadow-sm outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300"
+                placeholder="Cari nama atau jawatan..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+             {['ALL', 'BEKERJA', 'URUSAN LUAR', 'CUTI'].map(f => (
+                 <button 
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${filter === f ? 'bg-[#0f172a] text-white shadow-md' : 'bg-white text-gray-400 border border-gray-100'}`}
+                 >
+                    {f === 'ALL' ? 'Semua' : f}
+                 </button>
+             ))}
+          </div>
       </div>
 
-      <div className="relative mb-4">
-        <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
-        <input 
-            type="text" 
-            className="w-full pl-12 pr-4 py-3.5 rounded-[24px] bg-white text-gray-900 border border-gray-100 shadow-sm outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300"
-            placeholder="Cari nama atau jawatan..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-         {['ALL', 'BEKERJA', 'URUSAN LUAR', 'CUTI'].map(f => (
-             <button 
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`whitespace-nowrap px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${filter === f ? 'bg-[#0f172a] text-white shadow-lg' : 'bg-white text-gray-400 border border-gray-100'}`}
-             >
-                {f === 'ALL' ? 'Semua' : f}
-             </button>
-         ))}
-      </div>
-
-      <div className="space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 pb-28 pt-2 space-y-3 no-scrollbar">
         {loading ? (
             <div className="text-center py-12 text-gray-300 animate-pulse">Memuatkan maklumat staf...</div>
         ) : filteredStaff.length > 0 ? (

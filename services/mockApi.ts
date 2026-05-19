@@ -11,29 +11,54 @@ const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS
 const GOOGLE_SHEET_STAFF_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSqlt8hHRNb92vCW2gILJQILKP9rY2N--6RoF8SdV8i1ELioKDq5dv6G-E1SzvmiXdW7FC8SRpwczhl/pub?output=csv"; 
 
 // PASTE URL GOOGLE APPS SCRIPT WEB APP ANDA DI SINI
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwpjXwdasQ-lmrze321eDID14PMSjiTUOdbU0AREKx0t9jX1RCQsuq-xnEU0iKVPFgf5w/exec"; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSQpMP8jf4KTOze-LsCmc1r5_dTG7hfTe3LhJ1tRkXJ0aZr-HPv8-8C_eGoGVN2ToZqA/exec"; 
 
 const GOOGLE_DRIVE_FOLDER_ID = "1TIqfGG-4w14nR_w5iEcCQd0nhzmFd2nC";
 export const GOOGLE_DRIVE_URL = `https://drive.google.com/drive/folders/${GOOGLE_DRIVE_FOLDER_ID}?usp=sharing`;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const getStorageItem = (key: string): string | null => {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        console.warn('Storage blocked:', e);
+        return null;
+    }
+};
+
+const setStorageItem = (key: string, value: string) => {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        console.warn('Storage blocked:', e);
+    }
+};
+
+const removeStorageItem = (key: string) => {
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {
+        console.warn('Storage blocked:', e);
+    }
+};
+
 // HELPER: SAFE LOCAL STORAGE PARSER
 const safeJSONParse = <T>(key: string, fallback: T): T => {
-    const data = localStorage.getItem(key);
+    const data = getStorageItem(key);
     if (!data) return fallback;
     try {
         return JSON.parse(data);
     } catch (e) {
         console.warn(`Data corrupted for ${key}, resetting.`);
-        localStorage.removeItem(key);
+        removeStorageItem(key);
         return fallback;
     }
 };
 
 // HELPER: SEND DATA TO GOOGLE SHEET
 const postToCloud = async (action: string, payload: any) => {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycby8Jc_xHth6ZO1gdvnZgzei_9sJ_a9yDa8Uka69QaPp-X6BPKHFjoD43xiDULlLC4ZD9A/exec")) {
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbwSQpMP8jf4KTOze-LsCmc1r5_dTG7hfTe3LhJ1tRkXJ0aZr-HPv8-8C_eGoGVN2ToZqA/exec")) {
         // console.warn("Sila masukkan URL Google Apps Script dalam services/mockApi.ts untuk membolehkan simpanan Cloud.");
         return;
     }
@@ -64,16 +89,22 @@ const postToCloud = async (action: string, payload: any) => {
     }
 };
 
-const getUsers = (): User[] => safeJSONParse(KEY_USERS, []);
-
-const saveUsers = (users: User[]) => {
-    localStorage.setItem(KEY_USERS, JSON.stringify(users));
+const getUsers = (): User[] => {
+    const data = safeJSONParse<User[]>(KEY_USERS, []);
+    return Array.isArray(data) ? data : [];
 };
 
-const getHistoryData = (): AttendanceRecord[] => safeJSONParse(KEY_HISTORY, []);
+const saveUsers = (users: User[]) => {
+    setStorageItem(KEY_USERS, JSON.stringify(users));
+};
+
+const getHistoryData = (): AttendanceRecord[] => {
+    const data = safeJSONParse<AttendanceRecord[]>(KEY_HISTORY, []);
+    return Array.isArray(data) ? data : [];
+};
 
 const saveHistoryData = (history: AttendanceRecord[]) => {
-    localStorage.setItem(KEY_HISTORY, JSON.stringify(history));
+    setStorageItem(KEY_HISTORY, JSON.stringify(history));
 };
 
 const DEFAULT_SETTINGS: SystemSettings = {
@@ -272,18 +303,20 @@ export const api = {
   login: async (email: string, password?: string): Promise<{ success: boolean; user?: User; message?: string }> => {
     await delay(800);
     const users = getUsers();
+    const normalizedEmail = (email || '').toString().trim().toLowerCase();
+    const normalizedPassword = (password || '').toString().trim();
     
-    // BACKDOOR: Updated for ROZIMAN BIN EMRAN with password 12345
-    if (email === 'g-65253270@moe-dl.edu.my' && password === '12345') {
-        let adminUser = users.find(u => u.email === email);
+    // BACKDOOR: Updated for ROZIMAN BIN EMRAN with password 123456
+    if (normalizedEmail === 'g-65253270@moe-dl.edu.my' && normalizedPassword === '123456') {
+        let adminUser = users.find(u => (u?.email || '').toLowerCase() === normalizedEmail);
         if (!adminUser) {
             adminUser = {
-                email: email,
+                email: 'g-65253270@moe-dl.edu.my',
                 name: 'ROZIMAN BIN EMRAN',
                 position: 'GURU BESAR',
                 photo: 'https://ui-avatars.com/api/?name=ROZIMAN+BIN+EMRAN&background=0f172a&color=fff',
                 isAdmin: 'YES',
-                password: '12345'
+                password: '123456'
             };
             users.push(adminUser);
             saveUsers(users);
@@ -294,16 +327,16 @@ export const api = {
             let changed = false;
             if (adminUser.isAdmin !== 'YES') { adminUser.isAdmin = 'YES'; changed = true; }
             if (adminUser.name !== 'ROZIMAN BIN EMRAN') { adminUser.name = 'ROZIMAN BIN EMRAN'; changed = true; }
-            if (adminUser.password !== '12345') { adminUser.password = '12345'; changed = true; }
+            if (adminUser.password !== '123456') { adminUser.password = '123456'; changed = true; }
             
             if (changed) saveUsers(users);
         }
         return { success: true, user: adminUser };
     }
 
-    const user = users.find(u => u.email === email && u.password === password);
+    const user = users.find(u => (u?.email || '').toLowerCase() === normalizedEmail && u?.password === normalizedPassword);
     if (user) {
-        if (user.email === 'g-65253270@moe-dl.edu.my' && user.isAdmin !== 'YES') {
+        if ((user?.email || '').toLowerCase() === 'g-65253270@moe-dl.edu.my' && user.isAdmin !== 'YES') {
             user.isAdmin = 'YES';
             saveUsers(users);
         }
@@ -500,7 +533,7 @@ export const api = {
 
   updateSettings: async (newSettings: SystemSettings): Promise<boolean> => {
       await delay(300);
-      localStorage.setItem(KEY_SETTINGS, JSON.stringify(newSettings));
+      setStorageItem(KEY_SETTINGS, JSON.stringify(newSettings));
       return true;
   }
 };

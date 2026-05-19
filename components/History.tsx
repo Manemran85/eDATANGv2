@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { User, AttendanceRecord, AttendanceStatus, SystemSettings } from '../types';
 import { api } from '../services/mockApi';
 import { FileText, Star, Search, Calendar, Plane, Briefcase, CalendarX, AlertCircle } from 'lucide-react';
+import { formatDateToDDMMYYYY } from '../utils';
 
 export const History: React.FC<{ user: User }> = ({ user }) => {
   const [history, setHistory] = useState<AttendanceRecord[]>([]);
@@ -178,7 +179,7 @@ export const History: React.FC<{ user: User }> = ({ user }) => {
         return `
             <tr>
                 <td style="text-align: center;">${index + 1}</td>
-                <td>${item.date}</td>
+                <td>${formatDateToDDMMYYYY(item.date)}</td>
                 <td style="text-align: center;">${timeInDisplay}</td>
                 <td style="text-align: center;">${timeOutDisplay}</td>
                 <td style="text-align: center;">
@@ -332,7 +333,7 @@ export const History: React.FC<{ user: User }> = ({ user }) => {
                 </div>
                 <div class="uc-item">
                     <div class="meta-label">Tempoh Rekod</div>
-                    <div class="meta-val">${startDate ? startDate : 'AWAL'} - ${endDate ? endDate : 'KINI'}</div>
+                    <div class="meta-val">${startDate ? formatDateToDDMMYYYY(startDate) : 'AWAL'} - ${endDate ? formatDateToDDMMYYYY(endDate) : 'KINI'}</div>
                 </div>
             </div>
 
@@ -371,134 +372,125 @@ export const History: React.FC<{ user: User }> = ({ user }) => {
   };
 
   return (
-    <div className="min-h-screen px-5 pt-8 pb-32 bg-[#f8f9fe]">
-      {/* Header */}
-      <div className="mb-6">
-         <h1 className="text-2xl font-bold text-[#0f172a]">Rekod Saya</h1>
-         <p className="text-xs text-gray-400">Log aktiviti terkini daripada pangkalan data.</p>
-      </div>
-
-      {/* Download Button */}
-      <button 
-        onClick={handlePrintReport}
-        className="w-full bg-[#6366f1] text-white py-4 rounded-2xl shadow-lg shadow-indigo-200 font-bold text-sm flex items-center justify-center gap-2 mb-6 hover:bg-indigo-600 transition-colors active:scale-95"
-      >
-          <FileText size={18} />
-          MUAT TURUN LAPORAN
-      </button>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-          {/* 1. HADIR (Tepat Masa - Excluding Late) */}
-          <div className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center justify-center text-center h-28">
-             <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">HADIR</p>
-             <h3 className="text-2xl font-bold text-[#0f172a] mb-1">{Math.max(0, stats.countWorking - stats.countLate)}</h3>
-             <span className="text-[9px] text-green-500 font-bold uppercase">Tepat Masa</span>
+    <div className="h-[100dvh] bg-[#f8f9fe] flex flex-col overflow-hidden relative">
+      <div className="px-5 pt-8 pb-2 flex-shrink-0">
+          {/* Header */}
+          <div className="mb-4">
+             <h1 className="text-2xl font-bold text-[#0f172a]">Rekod Saya</h1>
+             <p className="text-xs text-gray-400">Log aktiviti terkini daripada pangkalan data.</p>
           </div>
 
-          {/* 2. HADIR (Lewat) */}
-          <div className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center justify-center text-center h-28">
-             <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">HADIR</p>
-             <h3 className="text-2xl font-bold text-[#0f172a] mb-1">{stats.countLate}</h3>
-             <span className="text-[9px] text-red-500 font-bold uppercase">Lewat</span>
+          {/* Download Button */}
+          <button 
+            onClick={handlePrintReport}
+            className="w-full bg-[#6366f1] text-white py-3.5 rounded-2xl shadow-lg shadow-indigo-200 font-bold text-sm flex items-center justify-center gap-2 mb-4 hover:bg-indigo-600 transition-colors active:scale-95"
+          >
+              <FileText size={18} />
+              MUAT TURUN LAPORAN
+          </button>
+
+          {/* Stats Grid - made smaller for mobile */}
+          <div className="grid grid-cols-4 gap-2 mb-4">
+              {/* 1. HADIR */}
+              <div className="bg-white p-2 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
+                 <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">HADIR</p>
+                 <h3 className="text-lg font-bold text-[#0f172a]">{Math.max(0, stats.countWorking - stats.countLate)}</h3>
+              </div>
+
+              {/* 2. LEWAT */}
+              <div className="bg-white p-2 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
+                 <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">LEWAT</p>
+                 <h3 className="text-lg font-bold text-[#0f172a]">{stats.countLate}</h3>
+              </div>
+
+              {/* 3. CUTI */}
+              <div className="bg-white p-2 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
+                 <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">CUTI</p>
+                 <h3 className="text-lg font-bold text-[#0f172a]">{stats.countLeave}</h3>
+              </div>
+              
+              {/* 4. LUAR */}
+              <div className="bg-white p-2 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
+                 <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5">LUAR</p>
+                 <h3 className="text-lg font-bold text-[#0f172a]">{stats.countOut}</h3>
+              </div>
           </div>
 
-          {/* 3. CUTI - Text Color Orange */}
-          <div className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center justify-center text-center h-28">
-             <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">CUTI</p>
-             <h3 className="text-2xl font-bold text-[#0f172a] mb-1">{stats.countLeave}</h3>
-             <span className="text-[9px] text-orange-500 font-bold uppercase">Log Cuti</span>
-          </div>
-          
-          {/* 4. URUSAN LUAR */}
-          <div className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center justify-center text-center h-28">
-             <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">URUSAN LUAR</p>
-             <h3 className="text-2xl font-bold text-[#0f172a] mb-1">{stats.countOut}</h3>
-             <span className="text-[9px] text-blue-500 font-bold uppercase">Log Aktif</span>
-          </div>
-      </div>
-
-      {/* Filters Section */}
-      <div className="bg-white p-5 rounded-[30px] shadow-sm mb-6">
-        {/* Search */}
-        <div className="relative mb-5">
-            <Search className="absolute left-4 top-3.5 text-gray-300" size={18} />
-            <input 
-                type="text" 
-                placeholder="Cari tarikh..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 pl-11 pr-4 py-3 rounded-xl text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-            />
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
-            {[
-                { id: 'ALL', label: 'SEMUA' },
-                { id: AttendanceStatus.WORKING, label: 'BEKERJA' },
-                { id: AttendanceStatus.OUTSTATION, label: 'LUAR' },
-                { id: AttendanceStatus.LEAVE, label: 'CUTI' }
-            ].map(tab => (
-                <button
-                    key={tab.id}
-                    onClick={() => setFilterType(tab.id)}
-                    className={`whitespace-nowrap px-5 py-2 rounded-lg text-[10px] font-bold transition-all ${
-                        filterType === tab.id 
-                        ? 'bg-[#0f172a] text-white shadow-md' 
-                        : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                    }`}
-                >
-                    {tab.label}
-                </button>
-            ))}
-        </div>
-
-        {/* Date Range */}
-        <div className="grid grid-cols-2 gap-4">
-            <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block pl-1">Mula</label>
+          {/* Filters Section - Compact */}
+          <div className="bg-white p-4 rounded-[24px] shadow-sm mb-2">
+            <div className="relative mb-3">
+                <Search className="absolute left-3 top-3 text-gray-300" size={16} />
                 <input 
-                    type="date" 
-                    value={startDate}
-                    onClick={(e) => (e.target as HTMLInputElement).showPicker()}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-gray-50 p-3 rounded-xl text-xs font-bold text-gray-700 outline-none focus:ring-1 focus:ring-indigo-200 cursor-pointer"
+                    type="text" 
+                    placeholder="Cari tarikh..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-gray-50 pl-9 pr-3 py-2.5 rounded-xl text-xs font-medium text-gray-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
                 />
             </div>
-            <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block pl-1">Tamat</label>
-                <input 
-                    type="date" 
-                    value={endDate}
-                    onClick={(e) => (e.target as HTMLInputElement).showPicker()}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-gray-50 p-3 rounded-xl text-xs font-bold text-gray-700 outline-none focus:ring-1 focus:ring-indigo-200 cursor-pointer"
-                />
+
+            <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3 pb-1">
+                {[
+                    { id: 'ALL', label: 'SEMUA' },
+                    { id: AttendanceStatus.WORKING, label: 'BEKERJA' },
+                    { id: AttendanceStatus.OUTSTATION, label: 'LUAR' },
+                    { id: AttendanceStatus.LEAVE, label: 'CUTI' }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setFilterType(tab.id)}
+                        className={`whitespace-nowrap px-4 py-1.5 rounded-lg text-[9px] font-bold transition-all ${
+                            filterType === tab.id 
+                            ? 'bg-[#0f172a] text-white shadow-sm' 
+                            : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                        }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
-        </div>
+
+            <div className="flex gap-3">
+                <div className="flex-1">
+                    <input 
+                        type="date" 
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full bg-gray-50 px-2 py-2 rounded-lg text-[10px] font-bold text-gray-700 outline-none"
+                    />
+                </div>
+                <div className="flex-1">
+                    <input 
+                        type="date" 
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full bg-gray-50 px-2 py-2 rounded-lg text-[10px] font-bold text-gray-700 outline-none"
+                    />
+                </div>
+            </div>
+          </div>
       </div>
 
       {/* History List */}
-      <div className="space-y-3">
+      <div className="flex-1 overflow-y-auto px-5 pb-28 space-y-2.5 no-scrollbar">
           {filteredHistory.length > 0 ? (
               filteredHistory.map((item) => (
-                  <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between border border-gray-50">
-                      <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 border border-gray-100`}>
+                  <div key={item.id} className="bg-white p-3.5 rounded-2xl shadow-sm flex items-center justify-between border border-gray-50">
+                      <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-9 h-9 flex-shrink-0 rounded-full flex items-center justify-center bg-gray-50 border border-gray-100`}>
                               {getStatusIcon(item.status)}
                           </div>
-                          <div>
-                              <h4 className="font-bold text-[#0f172a] text-sm">{item.date}</h4>
-                              <p className="text-[10px] text-gray-400 uppercase font-medium tracking-wide">{item.status}</p>
+                          <div className="min-w-0">
+                              <h4 className="font-bold text-[#0f172a] text-xs truncate">{formatDateToDDMMYYYY(item.date)}</h4>
+                              <p className="text-[9px] text-gray-400 uppercase font-medium tracking-wide truncate">{item.status}</p>
                           </div>
                       </div>
-                      <div className="text-right flex flex-col items-end">
-                          <span className={`block text-xs font-bold ${item.status === AttendanceStatus.WORKING ? getTimeColor(item.timeIn, 'IN') : 'text-gray-400'}`}>
-                             {item.status === AttendanceStatus.WORKING ? `IN: ${item.timeIn}` : 'TIADA REKOD MASA'}
+                      <div className="text-right flex flex-col items-end flex-shrink-0 ml-2">
+                          <span className={`block text-[10px] font-bold ${item.status === AttendanceStatus.WORKING ? getTimeColor(item.timeIn, 'IN') : 'text-gray-400'}`}>
+                             {item.status === AttendanceStatus.WORKING ? `IN: ${item.timeIn}` : '--:--'}
                           </span>
                           {item.status === AttendanceStatus.WORKING && item.timeOut && (
-                              <span className={`block text-xs font-bold mt-1 ${getTimeColor(item.timeOut, 'OUT')}`}>
+                              <span className={`block text-[10px] font-bold mt-0.5 ${getTimeColor(item.timeOut, 'OUT')}`}>
                                   OUT: {item.timeOut}
                               </span>
                           )}
@@ -506,8 +498,8 @@ export const History: React.FC<{ user: User }> = ({ user }) => {
                   </div>
               ))
           ) : (
-              <div className="text-center py-10">
-                  <p className="text-gray-300 text-sm">Tiada rekod dijumpai.</p>
+              <div className="text-center py-8">
+                  <p className="text-gray-300 text-xs">Tiada rekod dijumpai.</p>
               </div>
           )}
       </div>

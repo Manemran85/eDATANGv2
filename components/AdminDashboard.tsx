@@ -757,7 +757,7 @@ export const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser })
 
       {/* EDIT STAFF MODAL */}
       {editingStaff && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
              <div className="bg-white rounded-[40px] p-8 w-full max-w-sm shadow-2xl scale-100 animate-slide-up max-h-[90vh] overflow-y-auto no-scrollbar">
                  <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
                     <h3 className="font-bold text-xl text-gray-800 flex items-center gap-2 tracking-tight">

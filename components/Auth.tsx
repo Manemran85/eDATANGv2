@@ -14,6 +14,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   // Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Device Accounts State (Loaded from LocalStorage)
   const [deviceAccounts, setDeviceAccounts] = useState<User[]>([]);
@@ -38,6 +39,13 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+    
+    if (!email || !password) {
+        setErrorMsg('Sila masukkan emel dan kata laluan.');
+        return;
+    }
+
     setLoading(true);
     
     try {
@@ -45,10 +53,11 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
       if (res.success && res.user) {
         onLogin(res.user);
       } else {
-        alert(res.message || 'Log masuk gagal. Sila semak emel atau kata laluan. (Default: 123456)');
+        setErrorMsg(res.message || 'Log masuk gagal. Sila semak emel atau kata laluan.');
       }
-    } catch (error) {
-      alert('Ralat sistem berlaku.');
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      setErrorMsg(`Ralat sistem berlaku: ${error?.message || 'Sila cuba lagi.'}`);
     } finally {
       setLoading(false);
     }
@@ -100,12 +109,18 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 <p className="text-slate-500 font-medium">Sila masukkan ID Delima dan kata laluan anda.</p>
             </div>
 
+            {errorMsg && (
+                <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold border border-red-100 flex items-center gap-3">
+                    <ShieldCheck size={20} className="shrink-0" />
+                    <p>{errorMsg}</p>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Emel Delima</label>
                     <input
                         type="email"
-                        required
                         className="w-full px-5 py-4 rounded-2xl bg-slate-50 text-slate-900 border border-slate-50 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-bold text-sm"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -117,7 +132,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Kata Laluan</label>
                     <input
                         type="password"
-                        required
                         className="w-full px-5 py-4 rounded-2xl bg-slate-50 text-slate-900 border border-slate-50 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-bold text-sm"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

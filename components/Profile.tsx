@@ -4,6 +4,7 @@ import { User, AttendanceRecord, SystemSettings } from '../types';
 import { api } from '../services/mockApi';
 import { LogOut, Clock, CalendarCheck, User as UserIcon, Settings, Edit3, X, Save, Camera, Lock, Upload, FileText, Smartphone, Tablet, Monitor } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatDateToDDMMYYYY } from '../utils';
 
 interface ProfileProps {
   user: User;
@@ -206,7 +207,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, onUpdateUser }
                 </div>
                 <div>
                     <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Tarikh Lantikan Pertama</label>
-                    <p className="text-sm font-bold text-gray-800">{user.appointmentDate || '-'}</p>
+                    <p className="text-sm font-bold text-gray-800">{user.appointmentDate ? formatDateToDDMMYYYY(user.appointmentDate) : '-'}</p>
                 </div>
             </div>
         </div>
@@ -224,7 +225,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onLogout, onUpdateUser }
                             <div className="flex items-center gap-3">
                                 <div className={`w-2 h-10 rounded-full ${item.status === 'BEKERJA' ? 'bg-green-400' : 'bg-blue-400'}`}></div>
                                 <div>
-                                    <p className="font-bold text-gray-700 text-sm">{item.date}</p>
+                                    <p className="font-bold text-gray-700 text-sm">{formatDateToDDMMYYYY(item.date)}</p>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <p className="text-[10px] text-gray-400 font-medium uppercase">{item.status}</p>
                                         {item.deviceType && (

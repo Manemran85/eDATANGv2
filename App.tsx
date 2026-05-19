@@ -164,7 +164,9 @@ const AppContent = () => {
   }, [user]); // Re-run effect if user changes
 
   const handleLogin = (userData: User) => {
-    localStorage.setItem('userSession', JSON.stringify(userData));
+    try {
+        localStorage.setItem('userSession', JSON.stringify(userData));
+    } catch(e) { console.warn(e); }
     setUser(userData);
     
     // TRIGGER AUTO-SYNC ON LOGIN
@@ -173,12 +175,16 @@ const AppContent = () => {
   };
 
   const handleUpdateUser = (updatedUser: User) => {
-    localStorage.setItem('userSession', JSON.stringify(updatedUser));
+    try {
+        localStorage.setItem('userSession', JSON.stringify(updatedUser));
+    } catch(e) { console.warn(e); }
     setUser(updatedUser);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userSession');
+    try {
+        localStorage.removeItem('userSession');
+    } catch(e) { console.warn(e); }
     setUser(null);
   };
 

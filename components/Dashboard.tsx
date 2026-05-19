@@ -73,16 +73,8 @@ export const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       <div className="flex justify-between items-center mb-8">
          <div>
             <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Hai, {user.name.split(' ')[0]} 👋</h1>
-                <div className="flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
-                    <div className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </div>
-                    <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">LIVE</span>
-                </div>
+                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Hai, {user.name.split(' ')[0]}</h1>
             </div>
-            <p className="text-xs text-slate-500 font-medium mt-1">Data dikemaskini secara masa nyata.</p>
          </div>
          <div className="flex items-center gap-3">
              {isAdmin && (

@@ -4,6 +4,7 @@ import { api } from '../services/mockApi';
 import { AttendanceRecord, User, AttendanceStatus } from '../types';
 import { Search, Printer, ArrowLeft, Calendar, User as UserIcon, Filter, ExternalLink, FileText, MapPin, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatDateToDDMMYYYY } from '../utils';
 
 export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) => {
   const navigate = useNavigate();
@@ -45,8 +46,7 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
 
   const filteredHistory = history.filter(record => {
     const matchName = record.name.toLowerCase().includes(filterName.toLowerCase());
-    const recordMonth = record.date.split('-')[1]; 
-    const matchMonth = filterMonth ? recordMonth === filterMonth : true;
+    const matchMonth = filterMonth ? record.date.startsWith(filterMonth) : true;
     const matchDate = filterDate ? record.date === filterDate : true;
     return matchName && matchMonth && matchDate;
   });
@@ -57,6 +57,20 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
         alert("Sila benarkan 'Pop-up' untuk mencetak laporan.");
         return;
     }
+
+    // Determine filter summary for report
+    let filterSummary = [];
+    if (filterDate) {
+        filterSummary.push(`Tarikh: ${formatDateToDDMMYYYY(filterDate)}`);
+    } else if (filterMonth) {
+        filterSummary.push(`Bulan: ${filterMonth}`);
+    }
+    if (filterName) {
+        filterSummary.push(`Carian Nama: ${filterName}`);
+    }
+    const filterSummaryText = filterSummary.length > 0 
+        ? `<div class="filter-summary">Ditapis berdasarkan: ${filterSummary.join(', ')}</div>` 
+        : '';
 
     const rowsHtml = filteredHistory.map((rec, index) => {
         // LOGIK STATUS TERPERINCI
@@ -80,7 +94,7 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
         return `
             <tr>
                 <td style="text-align:center;">${index + 1}</td>
-                <td style="text-align:center;">${rec.date}</td>
+                <td style="text-align:center;">${formatDateToDDMMYYYY(rec.date)}</td>
                 <td><span style="font-weight:bold;">${rec.name}</span></td>
                 <td style="text-align:center;">${timeInDisplay}</td>
                 <td style="text-align:center;">${timeOutDisplay}</td>
@@ -109,7 +123,7 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin-bottom: 30px;
+                    margin-bottom: 20px;
                     border-bottom: 2px solid #1e40af;
                     padding-bottom: 15px;
                     gap: 20px;
@@ -146,6 +160,19 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
                     text-align: right;
                     font-size: 10px;
                     color: #555;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                }
+                
+                .filter-summary {
+                    font-size: 11px;
+                    font-weight: bold;
+                    color: #b91c1c;
+                    background-color: #fef2f2;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    border: 1px solid #fecaca;
                 }
 
                 table { 
@@ -195,7 +222,8 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
             </div>
             
             <div class="meta">
-                Dicetak pada: <b>${new Date().toLocaleDateString('ms-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</b>
+                <div>${filterSummaryText}</div>
+                <div>Dicetak pada: <b>${new Date().toLocaleDateString('ms-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</b></div>
             </div>
 
             <table>
@@ -267,7 +295,7 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
       <div className="max-w-7xl mx-auto px-6 py-8">
         
         {/* FILTERS */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
+        <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm mb-6 border border-gray-100 flex flex-col md:flex-row gap-3 items-center">
              <div className="relative flex-1 w-full">
                 <UserIcon className="absolute left-3 top-3.5 text-gray-400" size={16} />
                 <input 
@@ -278,21 +306,35 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none"
                 />
             </div>
-            <div className="relative flex-1 w-full">
+            <div className="relative flex-1 w-full flex gap-2">
                 <input 
                     type="date" 
                     value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none"
+                    onChange={(e) => {
+                        setFilterDate(e.target.value);
+                        if (e.target.value) setFilterMonth('');
+                    }}
+                    title="Cari Berdasarkan Tarikh"
+                    className="w-1/2 px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[10px] sm:text-xs font-bold text-gray-700 outline-none"
+                />
+                <input 
+                    type="month" 
+                    value={filterMonth}
+                    onChange={(e) => {
+                        setFilterMonth(e.target.value);
+                        if (e.target.value) setFilterDate('');
+                    }}
+                    title="Cari Berdasarkan Bulan"
+                    className="w-1/2 px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[10px] sm:text-xs font-bold text-gray-700 outline-none"
                 />
             </div>
         </div>
 
-        {/* DATA TABLE */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                    <thead>
+        {/* DATA TABLE / CARDS */}
+        <div className="bg-transparent md:bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-200 overflow-hidden">
+            <div className="md:overflow-x-auto pb-24 md:pb-0">
+                <table className="w-full text-left border-collapse block md:table">
+                    <thead className="hidden md:table-header-group">
                         <tr className="bg-slate-50 border-b border-gray-200">
                             <th className="px-4 py-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Tarikh</th>
                             <th className="px-4 py-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Nama Staf</th>
@@ -303,23 +345,23 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
                             <th className="px-4 py-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest text-center">Dokumen</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="block md:table-row-group space-y-3 md:space-y-0 divide-y-0 md:divide-y divide-gray-100">
                         {loading ? (
-                             <tr><td colSpan={7} className="px-6 py-12 text-center text-xs text-gray-400 animate-pulse">Memuatkan data...</td></tr>
+                             <tr className="block xl:table-row"><td colSpan={7} className="px-6 py-12 text-center text-xs text-gray-400 animate-pulse">Memuatkan data...</td></tr>
                         ) : filteredHistory.length > 0 ? (
                             filteredHistory.map((record, index) => (
-                                <tr key={index} className="hover:bg-blue-50/30 transition-colors">
-                                    <td className="px-4 py-2.5">
-                                        <span className="text-[11px] font-bold text-gray-700">{record.date}</span>
+                                <tr key={index} className="block md:table-row hover:bg-blue-50/30 transition-colors bg-white rounded-2xl md:rounded-none shadow-sm md:shadow-none p-4 md:p-0 border border-gray-100 md:border-none relative">
+                                    <td className="block md:table-cell px-2 md:px-4 py-1.5 md:py-2.5 before:content-['Tarikh:'] before:font-medium before:text-gray-400 before:mr-2 before:inline-block md:before:hidden text-[11px]">
+                                        <span className="font-bold text-gray-700">{formatDateToDDMMYYYY(record.date)}</span>
                                     </td>
-                                    <td className="px-4 py-2.5">
-                                        <span className="text-[11px] font-bold text-gray-900">{record.name}</span>
+                                    <td className="block md:table-cell px-2 md:px-4 py-1.5 md:py-2.5 before:content-['Nama:'] before:font-medium before:text-gray-400 before:mr-2 before:inline-block md:before:hidden text-[11px]">
+                                        <span className="font-bold text-gray-900">{record.name}</span>
                                     </td>
-                                    <td className="px-4 py-2.5">
-                                        <span className="text-[10px] text-gray-500">{record.email}</span>
+                                    <td className="block md:table-cell px-2 md:px-4 py-1.5 md:py-2.5 before:content-['Emel:'] before:font-medium before:text-gray-400 before:mr-2 before:inline-block md:before:hidden text-[10px] text-gray-500">
+                                        <span>{record.email}</span>
                                     </td>
-                                    <td className="px-4 py-2.5 text-center">
-                                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${
+                                    <td className="block md:table-cell px-2 md:px-4 py-1.5 md:py-2.5 md:text-center absolute md:relative top-2 md:top-auto right-2 md:right-auto">
+                                         <span className={`text-[9px] font-bold px-2 py-1 rounded-md border uppercase shadow-sm md:shadow-none ${
                                                 record.status === 'BEKERJA' ? 'bg-green-50 text-green-700 border-green-200' :
                                                 record.status === 'CUTI' ? 'bg-pink-50 text-pink-700 border-pink-200' :
                                                 'bg-blue-50 text-blue-700 border-blue-200'
@@ -327,15 +369,15 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
                                                 {record.status}
                                             </span>
                                     </td>
-                                    <td className="px-4 py-2.5 text-center">
-                                        <span className="text-[11px] font-medium text-gray-700">{record.timeIn || '-'}</span>
+                                    <td className="block md:table-cell px-2 md:px-4 py-1.5 md:py-2.5 md:text-center before:content-['Masuk:'] before:font-medium before:text-gray-400 before:mr-2 before:inline-block md:before:hidden text-[11px]">
+                                        <span className="font-medium text-gray-700">{record.timeIn || '-'}</span>
                                     </td>
-                                    <td className="px-4 py-2.5 text-center">
-                                        <span className="text-[11px] font-medium text-gray-700">{record.timeOut || '-'}</span>
+                                    <td className="block md:table-cell px-2 md:px-4 py-1.5 md:py-2.5 md:text-center before:content-['Keluar:'] before:font-medium before:text-gray-400 before:mr-2 before:inline-block md:before:hidden text-[11px]">
+                                        <span className="font-medium text-gray-700">{record.timeOut || '-'}</span>
                                     </td>
-                                    <td className="px-4 py-2.5 text-center">
+                                    <td className="block md:table-cell px-2 md:px-4 py-1.5 md:py-2.5 md:text-center before:content-['Dokumen:'] before:font-medium before:text-gray-400 before:mr-2 before:inline-block md:before:hidden text-[11px]">
                                         {record.document ? (
-                                            <a href="#" className="text-indigo-600 hover:text-indigo-800"><ExternalLink size={14} /></a>
+                                            <a href="#" className="text-indigo-600 hover:text-indigo-800 inline-block"><ExternalLink size={14} /></a>
                                         ) : (
                                             <span className="text-gray-300">-</span>
                                         )}
@@ -343,7 +385,7 @@ export const ReportSheet: React.FC<{ currentUser: User }> = ({ currentUser }) =>
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan={7} className="px-6 py-12 text-center text-xs text-gray-400">Tiada rekod dijumpai.</td></tr>
+                            <tr className="block xl:table-row"><td colSpan={7} className="px-6 py-12 text-center text-xs text-gray-400">Tiada rekod dijumpai.</td></tr>
                         )}
                     </tbody>
                 </table>
